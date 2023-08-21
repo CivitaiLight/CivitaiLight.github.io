@@ -23,7 +23,7 @@ function fetchData(urls) {
     })))
         .then(results => {
             let content = '';
-            content += `<header><div class="clipboard"><label title="вкл/выкл ведения списка скопированных ссылок"><input type="checkbox" id="clipboard_switch" /><span class="clipboard_switch"></span></label></div><div class="hide_anime"><label title="скрытие/показ моделей с тегом anime"><input type="checkbox" name="" id="without_anime"><span class="anime_switch"></span></label></div></header>`
+            content += `<header><div class="clipboard"><label title="вкл/выкл ведения списка скопированных ссылок"><input type="checkbox" id="clipboard_switch" /><span class="clipboard_switch"></span></label></div><div class="hide_anime"><label title="скрытие/показ моделей с тегом anime"><input type="checkbox" name="" id="without_anime"><span class="anime_switch"></span></label></div><div class="content_width"><label title="шире/уже колонка контента"><input type="checkbox" name="" id="wide_normal_width"><span class="width_switch"></span></label></div></header>`
             let uniqueIds = new Set();
             results.forEach(data => {
                 const items = data.items;
@@ -715,6 +715,49 @@ setInterval(function () {
         readClipboard();
     }
 }, 1000);
+
+const changeWidthCheckboxObserver = new MutationObserver(mutations => {
+    let changeWidthCheckbox = document.querySelector("#wide_normal_width");
+    mutations.forEach(mutation => {
+        if (mutation.type === "childList") {
+            if (changeWidthCheckbox) {
+                changeWidthCheckbox.checked = localStorage.getItem("wide_normal_width") === "true";
+
+                changeWidthCheckbox.addEventListener("change", function () {
+                    localStorage.setItem("wide_normal_width", changeWidthCheckbox.checked);
+                    updateModelItemStyles(changeWidthCheckbox.checked);
+                });
+                updateModelItemStyles(changeWidthCheckbox.checked);
+            }
+        }
+    });
+});
+changeWidthCheckboxObserver.observe(document.body, { childList: true, subtree: true });
+
+function updateModelItemStyles(checked) {
+    let modelItems = document.querySelectorAll("#content > div.model_item");
+    if (checked) {
+        modelItems.forEach(item => {
+            item.style.width = "calc(100vw - 100px)";
+            item.style.maxWidth = "1826px";
+            item.style.transition = "0s"
+        });
+    } else {
+        modelItems.forEach(item => {
+            item.style.width = "";
+            item.style.maxWidth = "";
+        });
+    }
+}
+
+window.addEventListener("load", () => {
+    let changeWidthCheckbox = document.querySelector("#wide_normal_width");
+    let checked = localStorage.getItem("wide_normal_width") === "true";
+    if (changeWidthCheckbox) {
+        changeWidthCheckbox.checked = checked;
+    }
+    updateModelItemStyles(checked);
+});
 
 // - - //
 
