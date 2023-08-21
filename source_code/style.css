@@ -290,7 +290,8 @@ header {
 	background-size: 30px;
 	background-position: 50%;
 	background-position-x: 0px;
-	transition: 0s !important;
+	transition: filter .3s !important;
+	transition-property: filter !important;
 }
 
 #wide_normal_width:checked+.width_switch {
