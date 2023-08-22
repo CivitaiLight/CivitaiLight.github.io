@@ -44,7 +44,13 @@ function fetchData(urls) {
                             versions.forEach(version => { if (version.name) { content += `<a class="version_url" versurl="${version.downloadUrl}">${version.name}</a>`; } });
                             content += `</div>`
                             if (item.modelVersions[0] && item.modelVersions[0].trainedWords && item.modelVersions[0].trainedWords.length > 0) { content += `<div class="triggers">${item.modelVersions[0].trainedWords.map(trainedWord => `<n>${trainedWord}</n>`).join('')}</div>`; }
-                            if (item.tags && item.tags.length > 0) { content += `<div class="tags">${item.tags.map(tag => `<n>${tag}</n>`).join('')}</div>`; }
+                            if (item.tags && item.tags.length > 0) {
+                                if (metadata.nextPage && metadata.nextPage.includes('tag')) {
+                                    content += `<div class="tags" tag_search="${metadata.nextPage.match(/tag=(.*?)&/)[1]}">${item.tags.map(tag => `<n>${tag}</n>`).join('')}</div>`;
+                                } else {
+                                    content += `<div class="tags">${item.tags.map(tag => `<n>${tag}</n>`).join('')}</div>`;
+                                }
+                            }
                             if (item.modelVersions[0] && item.modelVersions[0].images && item.modelVersions[0].images.length > 0) {
                                 content += `<div class="images">`
                                 const images = item.modelVersions[0].images.slice(0, 5);
@@ -59,6 +65,7 @@ function fetchData(urls) {
                                     if (image.meta && image.meta.sampler) { content += `<div class="sampler">sampler: <n>${image.meta.sampler}</n></div>`; }
                                     if (image.meta && image.meta.cfgScale) { content += `<div class="cfgScale">cfg: <n>${image.meta.cfgScale}</n></div>`; }
                                     if (image.meta && image.meta["Denoising strength"]) { content += `<div class="hires">hires up: <n>${image.meta["Hires upscale"]}, ${image.meta["Hires upscaler"]}, denoise ${image.meta["Denoising strength"]}</n></div>`; }
+                                    if (item.type != 'Checkpoint' && item.modelVersions[0].baseModel) {content += `<div class="sdbase">база: ${item.modelVersions[0].baseModel}</div>`}
                                     if (image.meta && item.type != 'Checkpoint' && image.meta.Model) { content += `<div class="checkpoint">использована модель: ${image.meta.Model}</div>`; }
                                     if (image.meta) { content += `</div>`; }
                                     content += `</div>`
@@ -207,6 +214,10 @@ function fetchData(urls) {
             } else if (headerTypeText === 'другое') {
                 ModelTypeHeader.textContent = 'Дополнительные материалы, гайды, воркфлоу';
             }
+            var tagsDiv = document.querySelector("#content > div.model_item > div.tags");
+            if (tagsDiv && tagsDiv.hasAttribute("tag_search")) {
+                ModelTypeHeader.textContent = ModelTypeHeader.textContent.slice(0, ModelTypeHeader.textContent.indexOf(":")) + ": тэг " + tagsDiv.getAttribute("tag_search");
+            }
             ModelTypeHeader.title = ModelTypeHeader.textContent;
             ModelTypeHeader.setAttribute('trimmed', ModelTypeHeader.textContent.slice(0, ModelTypeHeader.textContent.indexOf(":")));
 
@@ -278,7 +289,7 @@ function fetchData(urls) {
             var findnew = document.createElement('div');
             findnew.setAttribute('class', 'findnew');
             document.querySelector("header").appendChild(findnew);
-            findnew.innerHTML = `<div class="popular"><div class="malefocus"></div><div class="topdownload"></div><div class="liked"></div></div>`
+            findnew.innerHTML = `<div class="popular"><div class="malefocus" title="мужские"></div><div class="topdownload" title="топ по загрузкам"></div><div class="liked" title="топ по лайкам"></div></div>`
             var search = document.createElement('div');
             search.setAttribute('class', 'search');
             findnew.appendChild(search);
@@ -460,9 +471,10 @@ function generatePagination(currentPage, totalPages, ModelsSelectedType) {
 function lesstext(textelement, max) {
     for (var i = 0; i < textelement.length; i++) {
         (function () {
+            if (localStorage.getItem("wide_normal_width") && localStorage.getItem("wide_normal_width") === "true"){max = 1100}
             var promptElement = textelement[i];
             var text = promptElement.textContent;
-            if (text.length > 300) {
+            if (text.length > max) {
                 var textElement = document.createElement('span');
                 var truncatedText = text.slice(0, max) + '...';
                 textElement.textContent = truncatedText;
